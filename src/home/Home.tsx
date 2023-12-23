@@ -1,22 +1,37 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styles from './Home.module.scss';
 import { useForm, SubmitHandler } from 'react-hook-form';
-
-const isSuccess = false;
 
 interface IFormState {
   name: string,
   email: string,
 }
 
-const onSubmit: SubmitHandler<IFormState> = (data) => {
-  console.log(data)
-}
-
 function Home() {
+  const {register, handleSubmit, reset} = useForm<IFormState>()
+  const [isLoading, setIsLoading] = useState(false)
+  const [isSuccess, setIsSuccess] = useState(false)
 
-  const {register, handleSubmit} = useForm<IFormState>()
-
+  const onSubmit: SubmitHandler<IFormState> = (data) => {
+    setIsLoading(true)
+    fetch('http://localhost:5000/api', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(data),
+    }).then(response => {
+      response.json()
+    }).then(data => {
+      if(data !== null || data !== undefined) {
+        setIsSuccess(true)
+        reset()
+      }
+    }).finally(() => {
+      setIsLoading(false)
+    })
+  }
+  
   return (
     <div className={styles.wrapper}>
       <form onSubmit={handleSubmit(onSubmit)}>
@@ -30,7 +45,7 @@ function Home() {
               </h1>
               <input type="name" placeholder="Введите имя:" {...register('name')}/>
               <input type="email" placeholder="Введите Email:" {...register('email')}/>
-              <button>
+              <button disabled={isLoading}>
                 Отправить заявку
               </button>
           </>
